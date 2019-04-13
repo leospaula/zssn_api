@@ -8,6 +8,8 @@ Rails.application.routes.draw do
           post :flag_infection
         end
       end
+
+      post :trade_resources, to: 'trades#trade_resources'
     end
   end
 end
