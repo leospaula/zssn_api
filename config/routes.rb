@@ -3,7 +3,11 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      resources :survivors, only: [:index, :create, :update]
+      resources :survivors, only: [:index, :create, :update] do
+        member do
+          post :flag_infection
+        end
+      end
     end
   end
 end

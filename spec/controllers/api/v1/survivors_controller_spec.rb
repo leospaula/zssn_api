@@ -105,4 +105,59 @@ RSpec.describe API::V1::SurvivorsController, type: :controller do
       expect(survivor.last_location[:longitude]).to eq(update_params[:longitude])
     end
   end
+
+  describe "Flag survivor as infected" do 
+    context 'with a valid survivor' do
+      it "should increment the infection counter" do
+        water = attributes_for :resource, :water
+        food = attributes_for :resource, :food
+
+        not_infected_survivor = create(
+          :survivor, 
+          :not_infected, 
+          resources_attributes: [water, food]
+        )
+
+        post :flag_infection, params: { id: not_infected_survivor.id }
+
+        expect(response).to have_http_status(:ok)
+
+        expect(json_response[:message]).to eq "Survivor was reported as infected 1 time(s)!"
+
+        not_infected_survivor.reload
+
+        expect(not_infected_survivor.infected?).to eq false
+        expect(not_infected_survivor.infection_count).to eq 1
+      end
+
+      it "if the infection count is 3 should return a infected warning" do
+        water = attributes_for :resource, :water
+        food = attributes_for :resource, :food
+
+        almost_infected_survivor = create(
+          :survivor, 
+          :almost_infected, 
+          resources_attributes: [water, food]
+        )  
+        post :flag_infection, params: { id: almost_infected_survivor.id }
+
+        expect(response).to have_http_status(:ok)
+
+        expect(json_response[:message]).to eq "Survivor was reported as infected 3 time(s)!"
+
+        almost_infected_survivor.reload
+
+        expect(almost_infected_survivor.infected?).to eq true
+        expect(almost_infected_survivor.infection_count).to eq 3
+      end      
+    end
+
+    context 'with a invalid survivor' do
+      it 'should returns an not found error' do
+        post :flag_infection, params: { id: 123 }
+
+        expect(response.status).to eq(404)
+      end
+    end
+  end
 end
