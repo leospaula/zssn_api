@@ -7,8 +7,6 @@ RSpec.describe API::V1::SurvivorsController, type: :controller do
       
       get :index
 
-      json_response = JSON.parse(response.body)
-
       expect(response).to be_success
       expect(response.status).to eq(200)
       expect(json_response.count).to eq 1
@@ -18,7 +16,9 @@ RSpec.describe API::V1::SurvivorsController, type: :controller do
   describe "Creating survivor" do
     context "with valid params" do
       it "should create a new Survivor" do
-        survivor_params = attributes_for(:survivor)
+        ammunition = attributes_for :resource, :ammunition
+        food = attributes_for :resource, :food
+        survivor_params = attributes_for(:survivor, resources: [ammunition, food])
 
         expect {
           post :create, params: {survivor: survivor_params}
@@ -26,7 +26,9 @@ RSpec.describe API::V1::SurvivorsController, type: :controller do
       end
 
       it "should render a JSON response with the new survivor" do
-        survivor_params = attributes_for(:survivor)
+        medicine = attributes_for :resource, :water
+        ammunition = attributes_for :resource, :food
+        survivor_params = attributes_for(:survivor, resources: [medicine, ammunition])
 
         post :create, params: {survivor: survivor_params}
 
@@ -34,25 +36,52 @@ RSpec.describe API::V1::SurvivorsController, type: :controller do
         expect(response.content_type).to eq('application/json')
       end
 
-      it "should save all survivor's attributes" do 
-        survivor_params = attributes_for(:survivor)
+      it "should save all survivor's attributes" do
+        water = attributes_for :resource, :water
+        food = attributes_for :resource, :food
+        survivor_params = attributes_for(:survivor, resources: [water, food])
 
         post :create, params: {survivor: survivor_params}
 
         created_survivor = Survivor.last
 
-        expect(created_survivor.attributes.except('id', 'created_at', 'updated_at')).to eq survivor_params.with_indifferent_access
+        expect(created_survivor.attributes.except('id', 'resources', 'created_at', 'updated_at'))
+          .to eq(survivor_params.except(:resources).with_indifferent_access)
+      end
+
+      it "should save survivor's resources" do
+        water = attributes_for :resource, :water
+        food = attributes_for :resource, :food
+        survivor_params = attributes_for(:survivor, resources: [water, food])
+
+        post :create, params: {survivor: survivor_params}
+
+        resources = Resource.where(survivor_id: json_response.fetch(:survivor).fetch(:id))
+
+        expect(resources).to_not be_nil
+        expect(resources.first[:name]).to eq "water"
+        expect(resources.second[:name]).to  eq "food"
       end
     end
 
     context "with invalid params" do
       it "renders a JSON response with errors for the new survivor" do
-        survivor_params = attributes_for(:survivor)
+        water = attributes_for :resource, :water
+        food = attributes_for :resource, :food
+        survivor_params = attributes_for(:survivor, resources: [water, food])
 
         post :create, params: {survivor: survivor_params.except(:age)}
 
         expect(response).to have_http_status(:unprocessable_entity)
         expect(response.content_type).to eq 'application/json'
+      end
+
+      it "should not allow survivor without declare resources" do 
+        survivor_params = attributes_for(:survivor)
+        post :create, params: {survivor: survivor_params}
+
+        expect(response).to have_http_status(:conflict)
+        expect(json_response.fetch(:message)).to eq 'Survivor needs to declare resources'
       end
     end
   end

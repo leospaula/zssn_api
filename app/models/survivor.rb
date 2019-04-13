@@ -3,7 +3,11 @@ class Survivor < ApplicationRecord
 
   enum gender: [ :male, :female ]
 
+  has_many :resources
+
+  accepts_nested_attributes_for :resources
+
   def last_location
-    read_attribute(:last_location).with_indifferent_access
+    read_attribute(:last_location)&.with_indifferent_access
   end
 end

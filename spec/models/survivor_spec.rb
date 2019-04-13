@@ -7,4 +7,8 @@ RSpec.describe Survivor, type: :model do
     it { is_expected.to validate_presence_of(:gender) }
     it { is_expected.to validate_presence_of(:last_location) }
   end
+
+  describe "survivor relationships" do   
+    it { is_expected.to have_many :resources }
+  end
 end
