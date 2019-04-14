@@ -63,18 +63,12 @@ class TradeResources
   end
 
   def validate_resource_points
-    survivor_one_points = sum_resource_points(params.dig('survivor_1', 'resources')) 
-    survivor_two_points = sum_resource_points(params.dig('survivor_2', 'resources'))
+    survivor_one_points = SumResourcePoints.new(params.dig('survivor_1', 'resources')).execute
+    survivor_two_points = SumResourcePoints.new(params.dig('survivor_2', 'resources')).execute
 
     if survivor_one_points != survivor_two_points
       raise Error::TradeError.new(:conflict, "Resources points is not balanced both sides")
     end
-  end
-
-  def sum_resource_points(survivor_resources)
-    survivor_resources.sum { |resource| 
-      resource['quantity'].to_i * Resource::RESOURCE_POINTS[resource['name'].to_sym]
-    }
   end
 
   def execute_trade

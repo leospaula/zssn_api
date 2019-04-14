@@ -5,7 +5,7 @@ class API::V1::SurvivorsController < ApplicationController
   def index
     @survivors = Survivor.all
 
-    render json: { survivors: @survivors }, status: :ok
+    render json: { survivors: @survivors.as_json(include: {resources: {only: [:name, :quantity]}}) }, status: :ok
   end
 
   # POST /survivors
@@ -14,7 +14,7 @@ class API::V1::SurvivorsController < ApplicationController
       @survivor = Survivor.new(survivor_params.merge(resources_attributes: resources_params[:resources]))
 
       if @survivor.save
-        render json: { survivor: @survivor }, status: :created
+        render json: { survivor: @survivor.as_json(include: {resources: {only: [:name, :quantity]}}) }, status: :created
       else
         render json: { message: @survivor.errors }, status: :unprocessable_entity
       end
