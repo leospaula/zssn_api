@@ -10,6 +10,10 @@ class Survivor < ApplicationRecord
 
   accepts_nested_attributes_for :resources
 
+  scope :infecteds, -> { where('infection_count >= ?', INFECTION_MAX) }
+
+  scope :not_infecteds, -> { where('infection_count < ?', INFECTION_MAX) }
+
   def last_location
     read_attribute(:last_location)&.with_indifferent_access
   end
